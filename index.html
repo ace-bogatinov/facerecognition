@@ -10,174 +10,21 @@
 
 <body>
     <script>
-
         const app = new PIXI.Application({ resizeTo: window, background: 0xAAAAAA });
         document.body.appendChild(app.view);
 
         const images = [
-            { name: 'Abigail', path: 'Abigail.jpg', options: ['Abigail', 'Ava', 'James'] },
-            { name: 'Ava', path: 'Ava.jpg', options: ['Abigail', 'Ava', 'James'] },
-            { name: 'James', path: 'James.jpg', options: ['Abigail', 'Ava', 'James'] }
-            // { name: 'Ethan', path: 'Ethan.jpg' },
-            // { name: 'Oliver', path: 'Oliver.jpg' }
+            { name: 'Abigail', path: 'Abigail.jpg', options: ['Abigail', 'Ava', 'Sophia'] },
+            { name: 'Ava', path: 'Ava.jpg', options: ['Abigail', 'Ava', 'Sophia'] },
+            { name: 'Sophia', path: 'Sophia.jpg', options: ['Abigail', 'Ava', 'Sophia'] },
+            { name: 'Ethan', path: 'Ethan.jpg', options: ['Liam', 'Ethan', 'James'] },
+            { name: 'Liam', path: 'Liam.jpg', options: ['Liam', 'Ethan', 'James'] },
+            { name: 'James', path: 'James.jpg', options: ['Liam', 'Ethan', 'James'] }
         ];
+
         let currentIndex = 0;
+        let score = 0;
 
-        function showNextImage() {
-            if (currentIndex < images.length) {
-
-                app.stage.removeChildren();
-
-                const pathToFolder = '/images/';
-                const imageData = images[currentIndex];
-                const imagePath = pathToFolder + imageData.path;
-                const texture = PIXI.Texture.from(imagePath);
-                const sprite = new PIXI.Sprite(texture);
-
-                // Position the image in the center of the screen
-                sprite.anchor.set(0.5);
-                sprite.x = app.renderer.width / 2;
-                sprite.y = app.renderer.height / 2;
-                sprite.width = 500;
-                sprite.height = 500;
-
-                app.stage.addChild(sprite);
-
-                // Display the name below the image
-                const nameText = new PIXI.Text(imageData.name, { fill: 'white', fontSize: 24 });
-                nameText.anchor.set(0.5);
-                nameText.x = app.renderer.width / 2;
-                nameText.y = sprite.y + sprite.height / 2 + 40; // Position below the image
-                app.stage.addChild(nameText);
-
-                currentIndex++;
-
-
-                // Show the next image after a delay
-                setTimeout(showNextImage, 5000);
-            } else {
-                // All images shown, game over
-                app.stage.removeChildren();
-                startCountdown();
-            }
-        }
-
-        function startCountdown() {
-            let timer = 3;
-            const countdownText = new PIXI.Text(`Game starts in: ${timer}`, { fill: 'white', fontSize: 24 });
-            countdownText.anchor.set(0.5);
-            countdownText.x = app.renderer.width / 2;
-            countdownText.y = app.renderer.height / 2;
-            app.stage.addChild(countdownText);
-
-            const countdownInterval = setInterval(() => {
-                timer--;
-                countdownText.text = `Game starts in: ${timer}`;
-                if (timer === 0) {
-                    clearInterval(countdownInterval);
-                    app.stage.removeChild(countdownText);
-                    // Start the guessing game
-                    startGuessingGame();
-                }
-            }, 1000);
-        }
-
-        function startGuessingGame() {
-            // Remove previous image and name if they exist
-            app.stage.removeChildren();
-
-            // Initialize score
-            let score = 0;
-
-            // Iterate through images
-            images.forEach((imageData, index) => {
-                const pathToFolder = '/images/';
-                const imagePath = pathToFolder + imageData.path;
-                const texture = PIXI.Texture.from(imagePath);
-                const sprite = new PIXI.Sprite(texture);
-
-                // Position the image in the center of the screen
-                sprite.anchor.set(0.5);
-                sprite.x = app.renderer.width / 2;
-                sprite.y = app.renderer.height / 2;
-                sprite.width = 500;
-                sprite.height = 500;
-
-                app.stage.addChild(sprite);
-
-                // Shuffle name options
-                const shuffledOptions = shuffleArray(imageData.options);
-
-                // Display the shuffled name options
-                const nameOptions = [];
-                const nameBackgrounds = [];
-                shuffledOptions.forEach((option, optionIndex) => {
-                    const nameOptionText = new PIXI.Text(option, { fill: 'white', fontSize: 20 });
-                    nameOptionText.anchor.set(0.5);
-                    nameOptionText.x = app.renderer.width / 2;
-                    nameOptionText.y = sprite.y + sprite.height / 2 + (optionIndex * 50) + 40; // Position below the image
-                    app.stage.addChild(nameOptionText);
-
-                    // Create background rectangle for each name option
-                    const nameBackground = new PIXI.Graphics();
-                    nameBackground.beginFill(0x000000, 0.5);
-                    const nameTextPadding = 10;
-                    nameBackground.drawRect(
-                        app.renderer.width / 2 - 150 - nameTextPadding,
-                        sprite.y + sprite.height / 2 + (optionIndex * 50) + nameTextPadding,
-                        300 + 2 * nameTextPadding,
-                        40 + 2 * nameTextPadding
-                    );
-                    nameBackground.endFill();
-                    app.stage.addChild(nameBackground);
-                    nameBackgrounds.push(nameBackground);
-
-                    // Handle click event for guessing the name
-                    nameBackground.interactive = true;
-                    nameBackground.on('pointerdown', () => {
-                        if (option === imageData.name) {
-                            nameBackground.tint = 0x00FF00; // Green tint for correct guess
-                            score++; // Increment score for correct guess
-                        } else {
-                            nameBackground.tint = 0xFF0000; // Red tint for incorrect guess
-                        }
-                    });
-
-                    nameOptions.push(nameOptionText);
-                });
-
-                // Countdown timer for guessing
-                let timer = 5;
-                const countdownText = new PIXI.Text(`Time left: ${timer}`, { fill: 'white', fontSize: 24 });
-                countdownText.anchor.set(0.5);
-                countdownText.x = app.renderer.width / 2;
-                countdownText.y = 50;
-                app.stage.addChild(countdownText);
-
-                const countdownInterval = setInterval(() => {
-                    timer--;
-                    countdownText.text = `Time left: ${timer}`;
-                    if (timer === 0) {
-                        clearInterval(countdownInterval);
-                        // Remove name options and go to the next image
-                        nameOptions.forEach(option => app.stage.removeChild(option));
-                        nameBackgrounds.forEach(bg => app.stage.removeChild(bg));
-                    }
-                }, 1000);
-            });
-
-            // Show score when all images are guessed
-            setTimeout(() => {
-                const scoreText = new PIXI.Text(`Your score: ${score}`, { fill: 'white', fontSize: 24 });
-                scoreText.anchor.set(0.5);
-                scoreText.x = app.renderer.width / 2;
-                scoreText.y = app.renderer.height / 2;
-                app.stage.addChild(scoreText);
-            }, 5000 * images.length);
-        }
-
-
-        // Function to shuffle an array
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -186,9 +33,102 @@
             return array;
         }
 
+        function showNextImageWithRealName() {
+            if (currentIndex < images.length) {
+                app.stage.removeChildren();
 
-        // Start the game by showing the first image
-        showNextImage();
+                const imageData = images[currentIndex];
+                const texture = PIXI.Texture.from(`/images/${imageData.path}`);
+                const sprite = new PIXI.Sprite(texture);
+
+                // Position the image in the center of the screen
+                sprite.anchor.set(0.5);
+                sprite.x = app.renderer.width / 2;
+                sprite.y = app.renderer.height / 2;
+                sprite.width = 500;
+                sprite.height = 500;
+
+                app.stage.addChild(sprite);
+
+                // Display the real name of the image
+                const realNameText = new PIXI.Text(imageData.name, { fill: 'white', fontSize: 24 });
+                realNameText.anchor.set(0.5);
+                realNameText.x = app.renderer.width / 2;
+                realNameText.y = sprite.y + sprite.height / 2 + 40; // Position below the image
+                app.stage.addChild(realNameText);
+
+                currentIndex++;
+
+                setTimeout(showNextImageWithRealName, 5000);
+            } else {
+                // All images shown with real names, start guessing game
+                startGuessingGame();
+            }
+        }
+
+        function startGuessingGame() {
+            currentIndex = 0; // Reset currentIndex for the guessing game
+            shuffleArray(images); // Shuffle the images for guessing
+            showNextImage(); // Start the guessing game
+        }
+
+        function showNextImage() {
+            app.stage.removeChildren();
+
+            if (currentIndex < images.length) {
+                const imageData = images[currentIndex];
+                const texture = PIXI.Texture.from(`/images/${imageData.path}`);
+                const sprite = new PIXI.Sprite(texture);
+
+                const scoreText = new PIXI.Text(`Your score: ${score}/${images.length}`, { fill: 'white', fontSize: 24 });
+                scoreText.anchor.set(0.5);
+                scoreText.x = app.renderer.width / 2;
+                scoreText.y = 50; // Adjusted y position to make space for timer text
+                app.stage.addChild(scoreText);
+
+                // Position the image in the center of the screen
+                sprite.anchor.set(0.5);
+                sprite.x = app.renderer.width / 2;
+                sprite.y = app.renderer.height / 2;
+                sprite.width = 500;
+                sprite.height = 500;
+
+                app.stage.addChild(sprite);
+
+                // Display the name options
+                imageData.options.forEach((option, optionIndex) => {
+                    const nameOptionText = new PIXI.Text(option, { fill: 'white', fontSize: 20 });
+                    nameOptionText.anchor.set(0.5);
+                    nameOptionText.x = app.renderer.width / 2;
+                    nameOptionText.y = app.renderer.height / 2 + 300 + (optionIndex * 50); // Position below the image
+                    app.stage.addChild(nameOptionText);
+
+                    // Handle click event for guessing the name
+                    nameOptionText.interactive = true;
+                    nameOptionText.on('pointerdown', () => {
+                        if (option === imageData.name) {
+                            nameOptionText.style.fill = 'green'; // Green color for correct guess
+                            score++; // Increment score for correct guess
+                        } else {
+                            nameOptionText.style.fill = 'red'; // Red color for incorrect guess
+                        }
+                        currentIndex++;
+                        setTimeout(showNextImage, 1000); // Show the next image after a delay
+                    });
+                });
+            } else {
+                // All images guessed, show score
+                app.stage.removeChildren();
+                const scoreText = new PIXI.Text(`Your score: ${score}/${images.length}`, { fill: 'white', fontSize: 24 });
+                scoreText.anchor.set(0.5);
+                scoreText.x = app.renderer.width / 2;
+                scoreText.y = app.renderer.height / 2;
+                app.stage.addChild(scoreText);
+            }
+        }
+
+        // Start the game by showing each image with its real name
+        showNextImageWithRealName();
     </script>
 </body>
 
