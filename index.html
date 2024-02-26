@@ -21,28 +21,17 @@
             // { name: 'Ethan', path: 'Ethan.jpg' },
             // { name: 'Oliver', path: 'Oliver.jpg' }
         ];
-        let shuffledImages = shuffleArray(images);
         let currentIndex = 0;
-        let currentNameText = null;
-        let nameBackground = null;
-        let score = 0;
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
 
         function showNextImage() {
-            if (currentIndex < shuffledImages.length) {
+            if (currentIndex < images.length) {
                 const pathToFolder = '/images/';
-                const imageData = shuffledImages[currentIndex];
+                const imageData = images[currentIndex];
                 const imagePath = pathToFolder + imageData.path;
                 const texture = PIXI.Texture.from(imagePath);
-
                 const sprite = new PIXI.Sprite(texture);
+
+                // Position the image in the center of the screen
                 sprite.anchor.set(0.5);
                 sprite.x = app.renderer.width / 2;
                 sprite.y = app.renderer.height / 2;
@@ -51,122 +40,26 @@
 
                 app.stage.addChild(sprite);
 
-                if (currentNameText || nameBackground) { // Se otstranuva prethodniot text
-                    app.stage.removeChild(currentNameText);
-                    currentNameText.destroy();
-                    app.stage.removeChild(nameBackground);
-                }
-                // if (nameBackground) { // Se otstranuva prethodniot background
-                //     app.stage.removeChild(nameBackground);
-                // }
-
-                // Se kreira background za tekstot
-                nameBackground = new PIXI.Graphics();
-                nameBackground.beginFill(0x000000, 0.5);
-                const nameTextPadding = 10;
-                nameBackground.drawRect(
-                    app.renderer.width / 2 - 150 - nameTextPadding,
-                    sprite.y + sprite.height / 2 + nameTextPadding,
-                    300 + 2 * nameTextPadding,
-                    40 + 2 * nameTextPadding
-                );
-                nameBackground.endFill();
-                app.stage.addChild(nameBackground);
-
-                // Se dodava tekst pod slikata
-                currentNameText = new PIXI.Text(imageData.name, { fill: 'white', fontSize: 24 });
-                currentNameText.anchor.set(0.5);
-                currentNameText.x = app.renderer.width / 2;
-                currentNameText.y = sprite.y + sprite.height / 2 + 40; // Position below the image
-                app.stage.addChild(currentNameText);
-
-                //currentNameText = nameText;
+                // Display the name below the image
+                const nameText = new PIXI.Text(imageData.name, { fill: 'white', fontSize: 24 });
+                nameText.anchor.set(0.5);
+                nameText.x = app.renderer.width / 2;
+                nameText.y = sprite.y + sprite.height / 2 + 40; // Position below the image
+                app.stage.addChild(nameText);
 
                 currentIndex++;
 
+
+                // Show the next image after a delay
                 setTimeout(showNextImage, 5000);
             } else {
-                // All images shuffled, start guessing game
-                setTimeout(startGuessingGame, 1000);
+                // All images shown, game over
+                alert('Game Over');
             }
         }
 
-        function startGuessingGame() {
-
-            if (currentNameText || nameBackground) { // Check if currentNameText or nameBackground is not null
-                app.stage.removeChild(currentNameText);
-                if (currentNameText && !currentNameText.destroyed) { // Check if currentNameText is not null and not already destroyed
-                    currentNameText.destroy(); // Destroy currentNameText if it exists and not already destroyed
-                }
-                currentNameText = null;
-                app.stage.removeChild(nameBackground);
-            }
-
-            const spacingBetweenRectangles = 50;
-
-            const randomImageIndex = Math.floor(Math.random() * images.length);
-            const randomImageData = images[randomImageIndex];
-            const randomImagePath = '/images/' + randomImageData.path;
-            const randomTexture = PIXI.Texture.from(randomImagePath);
-
-            const randomSprite = new PIXI.Sprite(randomTexture);
-            randomSprite.anchor.set(0.5);
-            randomSprite.x = app.renderer.width / 2;
-            randomSprite.y = app.renderer.height / 2;
-            randomSprite.width = 500;
-            randomSprite.height = 500;
-            app.stage.addChild(randomSprite);
-
-            const nameOptionsBackgrounds = []; // Array to store background rectangles for names
-
-            // Display each name option in a separate rectangle
-            images.forEach((image, index) => {
-                const nameOptionBackground = new PIXI.Graphics();
-                nameOptionBackground.beginFill(0x000000, 0.5);
-                const nameTextPadding = 10;
-                nameOptionBackground.drawRect(
-                    app.renderer.width / 2 - 150 - nameTextPadding,
-                    randomSprite.y + randomSprite.height / 2 + (index * 100) + nameTextPadding,
-                    300 + 2 * nameTextPadding,
-                    100 + 2 * nameTextPadding
-                );
-                nameOptionBackground.endFill();
-                app.stage.addChild(nameOptionBackground);
-                nameOptionsBackgrounds.push(nameOptionBackground);
-
-                const nameOptionText = new PIXI.Text(image.name, { fill: 'white', fontSize: 20 });
-                nameOptionText.anchor.set(0.5);
-                nameOptionText.x = app.renderer.width / 2;
-                nameOptionText.y = randomSprite.y + randomSprite.height / 2 + (index * 40) + (index * spacingBetweenRectangles) + 40; // Position below the image
-                app.stage.addChild(nameOptionText);
-
-                // Handle click event for guessing the name
-                nameOptionBackground.interactive = true;
-                nameOptionBackground.on('pointerdown', (event) => {
-                    const clickedName = image.name;
-                    if (clickedName === randomImageData.name) {
-                        score++; // Increment score for correct guess
-                        nameOptionBackground.tint = 0x00FF00; // Green tint for correct guess
-                    } else {
-                        nameOptionBackground.tint = 0xFF0000; // Red tint for incorrect guess
-                    }
-                    // Remove the guess options and proceed to show the next image after 1 second
-                    setTimeout(() => {
-                        app.stage.removeChild(randomSprite);
-                        nameOptionsBackgrounds.forEach(bg => app.stage.removeChild(bg));
-                        showNextImage();
-                    }, 1000);
-                });
-            });
-        }
-
-        shuffleArray(images);
-
-        // Show the first image initially
+        // Start the game by showing the first image
         showNextImage();
-
-        // Repeat showing the next image every 5 seconds
-        //setInterval(showNextImage, 5000);
     </script>
 </body>
 
